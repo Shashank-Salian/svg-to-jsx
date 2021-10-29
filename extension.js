@@ -12,24 +12,8 @@ const path = require("path");
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "svg-to-jsx" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-
-	// context.subscriptions.push(
-	// 	vscode.commands.registerCommand("svg-to-jsx.helloWorld", function () {
-	// 		// The code you place here will be executed every time your command is executed
-
-	// 		// Display a message box to the user
-	// 		vscode.window.showInformationMessage("Hello World from SVG to JSX!");
-	// 	})
-	// );
-
 	/**
+	 * Creats and returns a boiler template code for react arrow functional component returning JSX
 	 *
 	 * @param {string} jsx
 	 * @param {string} fileName
@@ -46,8 +30,13 @@ function activate(context) {
 	};
 
 	/**
+	 * Convert the SVG to JSX/TSX
+	 * Creates a new .jsx or .tsx file with the same name as the SVG's and
+	 * creates a boiler plate code for basic arrow functional component with the SVG as JSX
+	 *
 	 * @param {vscode.TextEditor} activeTxtEditor
 	 * @param {string} ext
+	 * @returns {Promise<string>}
 	 */
 	const convert = async (activeTxtEditor, ext) => {
 		return new Promise(async (resolve, reject) => {
@@ -57,16 +46,27 @@ function activate(context) {
 			try {
 				const jsx = await svgtojsx(fileContent);
 
-				const pa = filePath.split("/");
-				const fileName = `${pa.pop().split(".")[0].replaceAll(" ", "")}${ext}`;
-				const finalPath = path.join("/", ...pa, fileName);
-				console.log(finalPath);
+				let finalPath = "",
+					pa = [],
+					fileName = "";
+
+				// Get the file name and replace the extentions as specified in the arguement,
+				// for windows and UNIX like systems
+				if (process.platform === "win32") {
+					pa = filePath.split("\\");
+					fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}${ext}`;
+					finalPath = path.join(...pa, fileName);
+				} else {
+					pa = filePath.split("/");
+					fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}${ext}`;
+					finalPath = path.join("/", ...pa, fileName);
+				}
+
 				const wstream = fs.createWriteStream(`${finalPath}`);
 				wstream.write(addJSX(jsx, fileName, ext === ".tsx"), (err) => {
 					if (err) {
 						console.log(err);
-						vscode.window.showErrorMessage("Something went wrong :(");
-						resolve();
+						reject("ERROR");
 					}
 					vscode.commands
 						.executeCommand("workbench.action.closeActiveEditor")
@@ -79,7 +79,7 @@ function activate(context) {
 			} catch (err) {
 				console.log(err);
 				vscode.window.showErrorMessage("Make sure you have valid svg markup.");
-				resolve(err);
+				reject(err);
 			}
 		});
 	};
@@ -90,13 +90,14 @@ function activate(context) {
 	 */
 	const checkFile = async (activeTxtEditor) => {
 		return new Promise((resolve, reject) => {
+			// Check if there is open text editor
 			if (!activeTxtEditor) {
 				vscode.window.showErrorMessage(
 					"Open a svg file to convert to JSX/TSX!"
 				);
 				resolve(false);
 			}
-			console.log(activeTxtEditor.document.uri.fsPath);
+			// If the file isn't .svg show warning!
 			if (!activeTxtEditor.document.uri.fsPath.endsWith(".svg")) {
 				vscode.window
 					.showWarningMessage(
@@ -129,7 +130,7 @@ function activate(context) {
 				}
 
 				const jsxPath = await convert(activeTxtEditor, ".tsx");
-				const uri = vscode.Uri.parse(jsxPath);
+				const uri = vscode.Uri.file(jsxPath);
 				await vscode.commands.executeCommand("vscode.open", uri);
 				await vscode.commands.executeCommand("editor.action.formatDocument");
 				await vscode.commands.executeCommand("workbench.action.files.save");
@@ -143,19 +144,21 @@ function activate(context) {
 			async function () {
 				const activeTxtEditor = vscode.window.activeTextEditor;
 
-				const goAhead = await checkFile(activeTxtEditor);
+				try {
+					const goAhead = await checkFile(activeTxtEditor);
 
-				if (!goAhead) {
-					return;
+					if (!goAhead) {
+						return;
+					}
+
+					const jsxPath = await convert(activeTxtEditor, ".jsx");
+					const uri = vscode.Uri.file(jsxPath);
+					await vscode.commands.executeCommand("vscode.open", uri);
+					await vscode.commands.executeCommand("editor.action.formatDocument");
+					await vscode.commands.executeCommand("workbench.action.files.save");
+				} catch (err) {
+					await vscode.window.showErrorMessage("Something went wrong :(");
 				}
-
-				console.log(activeTxtEditor.document.uri.fsPath);
-
-				const jsxPath = await convert(activeTxtEditor, ".jsx");
-				const uri = vscode.Uri.parse(jsxPath);
-				await vscode.commands.executeCommand("vscode.open", uri);
-				await vscode.commands.executeCommand("editor.action.formatDocument");
-				await vscode.commands.executeCommand("workbench.action.files.save");
 			}
 		)
 	);
