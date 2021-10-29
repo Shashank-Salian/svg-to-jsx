@@ -1,0 +1,48 @@
+{
+	"name": "svg-to-jsx",
+	"displayName": "SVG to JSX",
+	"description": "Convert SVG to JSX directly in your VScode in just one command.",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.61.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:svg-to-jsx.converttojsx",
+		"onCommand:svg-to-jsx.converttotsx"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "svg-to-jsx.converttojsx",
+				"title": "Convert to JSX"
+			},
+			{
+				"command": "svg-to-jsx.converttotsx",
+				"title": "Convert to TSX"
+			}
+		]
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"pretest": "npm run lint",
+		"test": "node ./test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.4",
+		"@types/mocha": "^9.0.0",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.61.0",
+		"@vscode/test-electron": "^1.6.2",
+		"eslint": "^7.32.0",
+		"glob": "^7.1.7",
+		"mocha": "^9.1.1",
+		"typescript": "^4.4.3"
+	},
+	"dependencies": {
+		"svg-to-jsx": "^1.0.3"
+	}
+}
