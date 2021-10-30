@@ -2,6 +2,7 @@
 	"name": "svg-to-jsx",
 	"displayName": "SVG to JSX",
 	"description": "Convert SVG to JSX directly in your VScode in just one command.",
+	"publisher": "codeWithShashank",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.61.0"
@@ -14,6 +15,7 @@
 		"onCommand:svg-to-jsx.converttotsx"
 	],
 	"main": "./extension.js",
+	"repository": "https://github.com/Shashank-Salian/svg-to-jsx",
 	"contributes": {
 		"commands": [
 			{

@@ -55,10 +55,12 @@ function activate(context) {
 				if (process.platform === "win32") {
 					pa = filePath.split("\\");
 					fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}${ext}`;
+					fileName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
 					finalPath = path.join(...pa, fileName);
 				} else {
 					pa = filePath.split("/");
 					fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}${ext}`;
+					fileName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
 					finalPath = path.join("/", ...pa, fileName);
 				}
 
