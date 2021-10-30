@@ -4,7 +4,7 @@
 
 <br />
 
-![Usage of this extention](https://github.com/Shashank-Salian/svg-to-jsx/blob/main/usage.gif)
+![Usage of this extention](https://github.com/Shashank-Salian/svg-to-jsx/raw/main/usage.gif)
 
 <br />
 
