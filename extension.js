@@ -125,17 +125,21 @@ function activate(context) {
 			async function () {
 				const activeTxtEditor = vscode.window.activeTextEditor;
 
-				const goAhead = await checkFile(activeTxtEditor);
+				try {
+					const goAhead = await checkFile(activeTxtEditor);
 
-				if (!goAhead) {
-					return;
+					if (!goAhead) {
+						return;
+					}
+
+					const jsxPath = await convert(activeTxtEditor, ".tsx");
+					const uri = vscode.Uri.file(jsxPath);
+					await vscode.commands.executeCommand("vscode.open", uri);
+					await vscode.commands.executeCommand("editor.action.formatDocument");
+					await vscode.commands.executeCommand("workbench.action.files.save");
+				} catch (err) {
+					await vscode.window.showErrorMessage("Something went wrong :(");
 				}
-
-				const jsxPath = await convert(activeTxtEditor, ".tsx");
-				const uri = vscode.Uri.file(jsxPath);
-				await vscode.commands.executeCommand("vscode.open", uri);
-				await vscode.commands.executeCommand("editor.action.formatDocument");
-				await vscode.commands.executeCommand("workbench.action.files.save");
 			}
 		)
 	);
