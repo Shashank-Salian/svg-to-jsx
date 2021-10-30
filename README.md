@@ -4,7 +4,7 @@
 
 <br />
 
-<video src="./asset/usage.mp4" width="100%" autoplay loop></video>
+![Usage of this extention](https://github.com/Shashank-Salian/svg-to-jsx/blob/main/usage.gif)
 
 <br />
 
