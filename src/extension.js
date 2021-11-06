@@ -58,7 +58,6 @@ function activate(context) {
 				const wstream = fs.createWriteStream(finalPath);
 				wstream.write(help.addJSX(jsx, fileName, ext === ".tsx"), (err) => {
 					if (err) {
-						console.log(err);
 						reject("ERROR");
 					}
 					if (config("deleteSVG")) {
@@ -74,8 +73,9 @@ function activate(context) {
 					resolve(finalPath);
 				});
 			} catch (err) {
-				console.log(err);
-				vscode.window.showErrorMessage("Make sure you have valid svg markup.");
+				await vscode.window.showErrorMessage(
+					"Make sure you have valid svg markup."
+				);
 				reject(err);
 			}
 		});
