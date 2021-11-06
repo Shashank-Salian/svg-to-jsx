@@ -3,7 +3,7 @@
 	"displayName": "SVG to JSX",
 	"description": "Convert SVG to JSX directly in your VScode in just one command.",
 	"publisher": "codeWithShashank",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"icon": "logo.png",
 	"engines": {
 		"vscode": "^1.61.0"
@@ -15,19 +15,29 @@
 		"onCommand:svg-to-jsx.converttojsx",
 		"onCommand:svg-to-jsx.converttotsx"
 	],
-	"main": "./extension.js",
+	"main": "./src/extension.js",
 	"repository": "https://github.com/Shashank-Salian/svg-to-jsx",
 	"contributes": {
 		"commands": [
 			{
 				"command": "svg-to-jsx.converttojsx",
-				"title": "Convert to JSX"
+				"title": "Convert to react JSX"
 			},
 			{
 				"command": "svg-to-jsx.converttotsx",
-				"title": "Convert to TSX"
+				"title": "Convert to react TSX"
 			}
-		]
+		],
+		"configuration": {
+			"title": "SVG to JSX",
+			"properties": {
+				"svg-to-jsx.settings.deleteSVG": {
+					"type": "boolean",
+					"default": true,
+					"description": "Delete the SVG file after converting to JSX/TSX."
+				}
+			}
+		}
 	},
 	"scripts": {
 		"lint": "eslint .",
