@@ -8,6 +8,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Support for vscode web
 
+## [0.0.5]
+
+- Check for existing file with same name and generate a new unique file name instead of over writing.
+
 ## [0.0.4]
 
 - Users can now choose to delete the SVG file or not.

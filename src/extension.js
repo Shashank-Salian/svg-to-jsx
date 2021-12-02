@@ -3,7 +3,6 @@
 const vscode = require("vscode");
 const svgtojsx = require("svg-to-jsx");
 const fs = require("fs");
-const path = require("path");
 const config = require("./config");
 const help = require("./helper");
 
@@ -20,40 +19,18 @@ function activate(context) {
 	 * creates a boiler plate code for basic arrow functional component with the SVG as JSX
 	 *
 	 * @param {vscode.TextEditor} activeTxtEditor
-	 * @param {string} ext
+	 * @param {string} finalPath File path in which the JSX/TSX will be stored
+	 * @param {string} fileName File name in which the JSX/TSX will be stored
+	 * @param {".jsx" | ".tsx"} ext The extention
 	 * @returns {Promise<string>}
 	 */
-	const convert = async (activeTxtEditor, ext) => {
+	const convert = async (activeTxtEditor, finalPath, fileName, ext) => {
 		return new Promise(async (resolve, reject) => {
 			const filePath = activeTxtEditor.document.uri.fsPath;
 			const fileContent = activeTxtEditor.document.getText();
 
 			try {
 				const jsx = await svgtojsx(fileContent);
-
-				// Get the file name and replace the extentions as specified in the arguement,
-				// for windows and UNIX like systems
-				const pa =
-					process.platform === "win32"
-						? filePath.split("\\")
-						: filePath.split("/");
-
-				// Remove all the spaces from File name
-				let fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}`;
-
-				// convert to PascalCase
-				fileName = fileName.includes("-")
-					? `${fileName
-							.split("-")
-							.reduce(
-								(prev, curr) =>
-									`${help.capitalize(prev)}${help.capitalize(curr)}`
-							)}${ext}`
-					: `${help.capitalize(fileName)}${ext}`;
-
-				const finalPath = `${
-					process.platform !== "win32" ? "/" : ""
-				}${path.join(...pa, fileName)}`;
 
 				const wstream = fs.createWriteStream(finalPath);
 				wstream.write(help.addJSX(jsx, fileName, ext === ".tsx"), (err) => {
@@ -88,13 +65,18 @@ function activate(context) {
 				const activeTxtEditor = vscode.window.activeTextEditor;
 
 				try {
-					const goAhead = await help.checkFile(activeTxtEditor);
+					const fileDat = await help.checkFile(activeTxtEditor, ".tsx");
 
-					if (!goAhead) {
+					if (fileDat === null) {
 						return;
 					}
 
-					const jsxPath = await convert(activeTxtEditor, ".tsx");
+					const jsxPath = await convert(
+						activeTxtEditor,
+						fileDat.finalPath,
+						fileDat.fileName,
+						".tsx"
+					);
 					await help.formatDocument(jsxPath);
 				} catch (err) {
 					await vscode.window.showErrorMessage("Something went wrong :(");
@@ -110,13 +92,18 @@ function activate(context) {
 				const activeTxtEditor = vscode.window.activeTextEditor;
 
 				try {
-					const goAhead = await help.checkFile(activeTxtEditor);
+					const fileDat = await help.checkFile(activeTxtEditor, ".jsx");
 
-					if (!goAhead) {
+					if (fileDat === null) {
 						return;
 					}
 
-					const jsxPath = await convert(activeTxtEditor, ".jsx");
+					const jsxPath = await convert(
+						activeTxtEditor,
+						fileDat.finalPath,
+						fileDat.fileName,
+						".jsx"
+					);
 					await help.formatDocument(jsxPath);
 				} catch (err) {
 					await vscode.window.showErrorMessage("Something went wrong :(");
