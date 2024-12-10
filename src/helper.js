@@ -1,42 +1,63 @@
 const vscode = require("vscode");
-const path = require("path");
-const fs = require("fs");
+const templates = require("./templates");
 
 /**
  * Capitalizes the first character of a string
  * @param {string} str
  * @returns {string}
  */
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 /**
- * This function will check for existance of file in the directory
- * in which it will write out the JSX or TSX template
- *
- * @param {string} finalPath // Full path of the JSX or TSX file
- * @param {string} fileName // File name of the JSX or TSX file
- * @param {number} i // Number suffix at the end of the file name
- * @returns {{ fileName: string, finalPath: string }}
+ * Check if the file exists
+ * @param {vscode.Uri} uri
  */
-const renameFileTo = (finalPath, fileName, i = 0) => {
-	const fa = fileName.split(".");
-	const newFileName = `${fa[0]}${i ? i : ""}.${fa[fa.length - 1]}`;
+async function fileExists(uri) {
+  try {
+    await vscode.workspace.fs.stat(uri);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
 
-	let newPath = "";
-	if (process.platform === "win32") {
-		const pa = finalPath.split("\\");
-		pa.pop();
-		newPath = `${pa.join("\\")}\\${newFileName}`;
-	} else {
-		const pa = finalPath.split("/");
-		pa.pop();
-		newPath = `${pa.join("/")}/${newFileName}`;
-	}
+/**
+ * Returns a distinct URI path for the JSX or TSX file
+ * Expects that it has been converted to JSX or TSX
+ * @param {vscode.Uri} uri
+ */
+async function getDistinctUri(uri, num = 1) {
+  if (!(await fileExists(uri))) return uri;
 
-	return fs.existsSync(newPath)
-		? renameFileTo(finalPath, fileName, ++i)
-		: { finalPath: newPath, fileName: newFileName };
-};
+  const newUriPathArr = uri.toString(true).split("/");
+  let [fileName, ext] = newUriPathArr.pop().split(".");
+
+  fileName = fileName.replace(/\d+/, "");
+  const newPath = vscode.Uri.parse(
+    newUriPathArr.join("/") + `/${fileName}${num}.${ext}`
+  );
+  return getDistinctUri(newPath, num + 1);
+}
+
+/**
+ *
+ * @param {vscode.Uri} uri
+ * @param {".jsx" | ".tsx"} ext
+ */
+async function createJsxFile(uri, ext) {
+  // Convert SVG file name to TSX or JSX
+  const newUriPathArr = uri.toString(true).split("/");
+  const fileName = newUriPathArr.pop();
+  const newFileName = formatFileName(fileName, ext);
+
+  const newUriPath = newUriPathArr.join("/") + `/${newFileName}`;
+
+  const newPath = vscode.Uri.parse(newUriPath);
+  // Check if the file already exist and rename if required
+  return await getDistinctUri(newPath);
+}
 
 /**
  * Check if the file is SVG, if not warn the user.
@@ -44,115 +65,114 @@ const renameFileTo = (finalPath, fileName, i = 0) => {
  *
  * @param {vscode.TextEditor} activeTxtEditor
  * @param {".jsx" | ".tsx"} ext
- * @returns {Promise<{ fileName: string, finalPath: string } | null>}
+ * @returns {Promise<vscode.Uri | null>}
  */
-const checkFile = async (activeTxtEditor, ext) => {
-	return new Promise((resolve, reject) => {
-		// Check if there is open text editor
-		if (!activeTxtEditor) {
-			vscode.window.showErrorMessage("Open a svg file to convert to JSX/TSX!");
-			resolve(null);
-		}
-		// If the file isn't .svg show warning!
-		if (!activeTxtEditor.document.uri.fsPath.endsWith(".svg")) {
-			vscode.window
-				.showWarningMessage(
-					"Open a svg file to convert to JSX. Override ?",
-					"Yes",
-					"No"
-				)
-				.then((value) => {
-					if (value === "Yes") {
-						// Convert SVG file to TSX or JSX
-						const { finalPath, fileName } = formatPath(
-							activeTxtEditor.document.uri.fsPath,
-							ext
-						);
-						// Check if the file already exist and rename if required
-						const finalFileName = renameFileTo(finalPath, fileName);
-						resolve(finalFileName);
-					}
-					resolve(null);
-				});
-		} else {
-			// Convert SVG file to TSX or JSX
-			const { finalPath, fileName } = formatPath(
-				activeTxtEditor.document.uri.fsPath,
-				ext
-			);
-			// Check if the file already exist and rename if required
-			const finalFileName = renameFileTo(finalPath, fileName);
-			resolve(finalFileName);
-		}
-	});
-};
+function prepareFiles(activeTxtEditor, ext) {
+  return new Promise(async (resolve, reject) => {
+    // Check if there is open text editor
+    if (!activeTxtEditor) {
+      vscode.window.showErrorMessage("Open a svg file to convert to JSX/TSX!");
+      resolve(null);
+    }
+
+    const fileName = activeTxtEditor.document.fileName;
+    // If the file isn't .svg show warning!
+    if (!fileName.endsWith(".svg")) {
+      const response = await vscode.window.showWarningMessage(
+        "You have not currently opened a SVG file, do you want to continue ?",
+        "Yes",
+        "No"
+      );
+      if (response === "No") {
+        resolve(null);
+        return;
+      }
+    }
+    // Convert SVG URI to JSX or TSX file path
+    const finalUri = await createJsxFile(activeTxtEditor.document.uri, ext);
+    resolve(finalUri);
+  });
+}
 
 /**
- * @param {string} jsxPath
+ * Executes the default format command and saves the file
+ * @param {vscode.Uri} uri
  */
-const formatDocument = async (jsxPath) => {
-	const uri = vscode.Uri.file(jsxPath);
-	await vscode.commands.executeCommand("vscode.open", uri);
-	await vscode.commands.executeCommand("editor.action.formatDocument");
-	await vscode.commands.executeCommand("workbench.action.files.save");
-};
+async function formatDocument(uri) {
+  await vscode.commands.executeCommand("vscode.open", uri);
+  await vscode.commands.executeCommand("editor.action.formatDocument");
+  await vscode.commands.executeCommand("workbench.action.files.save");
+}
 
 /**
- * Creats and returns a boiler template code for react arrow functional component returning JSX
+ * Creates and returns a boiler template code for react arrow functional component returning JSX
  *
  * @param {string} jsx
  * @param {string} fileName
  * @param {boolean} isTs
  * @returns {string}
  */
-const addJSX = (jsx, fileName, isTs = false) => {
-	const name = (fileName.charAt(0).toUpperCase() + fileName.slice(1)).split(
-		"."
-	)[0];
-	return isTs
-		? `import React from 'react';\n\ninterface Props {\n\tclassName?: string;\n}\n\nconst ${name} = (props: Props) => {\n\treturn (\n\t\t${jsx}\n\t)\n}\n\nexport default ${name}\n`
-		: `import React from 'react';\n\nconst ${name} = (props) => {\n\treturn (\n\t\t${jsx}\n\t)\n}\n\nexport default ${name}\n`;
-};
+function addJSX(jsx, fileName, isTs = false) {
+  const componentName = fileName.split(".")[0];
+
+  return isTs
+    ? templates.embedTsxTemplate(componentName, jsx)
+    : templates.embedJsxTemplate(componentName, jsx);
+}
 
 /**
  * Convert SVG file path to JSX or TSX file path
  * and return full file path and file name in an object
  *
- * @param {string} filePath
+ * @param {string} fileName
  * @param {".jsx" | ".tsx"} ext
- * @returns {{ fileName: string, finalPath: string }}
+ * @returns {string}
  */
-const formatPath = (filePath, ext) => {
-	// Get the file name and replace the extentions as specified in the arguement,
-	// for windows and UNIX like systems
-	const pa =
-		process.platform === "win32" ? filePath.split("\\") : filePath.split("/");
+function formatFileName(fileName, ext) {
+  if (fileName.length > 100) {
+    vscode.window.showWarningMessage("File name is too long! Truncating...");
+    fileName = fileName.substring(0, 20) + ext;
+  }
 
-	// Remove all the spaces from File name
-	let fileName = `${pa.pop().split(".")[0].replace(/\s/g, "")}`;
+  //   Remove extension
+  fileName = fileName.replace(/(\.[^.]+)$/gi, "");
+  fileName = fileName.replace(/[^\w\s\.\-_]/g, "");
 
-	// convert to PascalCase
-	fileName = fileName.includes("-")
-		? `${fileName
-				.split("-")
-				.reduce(
-					(prev, curr) => `${capitalize(prev)}${capitalize(curr)}`
-				)}${ext}`
-		: `${capitalize(fileName)}${ext}`;
+  // convert to Capital Case
+  fileName = capitalize(fileName);
 
-	return {
-		finalPath: `${process.platform !== "win32" ? "/" : ""}${path.join(
-			...pa,
-			fileName
-		)}`,
-		fileName,
-	};
-};
+  fileName = fileName
+    .split(" ")
+    .reduce((prev, curr) => `${capitalize(prev)}${capitalize(curr)}`)
+    .split("-")
+    .reduce((prev, curr) => `${capitalize(prev)}${capitalize(curr)}`)
+    .split("_")
+    .reduce((prev, curr) => `${capitalize(prev)}${capitalize(curr)}`)
+    .split(".")
+    .reduce((prev, curr) => `${capitalize(prev)}${capitalize(curr)}`);
+
+  return fileName + ext;
+}
+
+/**
+ * Get file name with extension from URI
+ * @throws {Error} If the file name is not found
+ * @param {vscode.Uri} uri
+ * @returns {string}
+ */
+function getFileName(uri) {
+  const match = uri.toString().match(/[^/]+\w+$/);
+  if (match) return match[0];
+  throw new Error("File name not found");
+}
 
 module.exports = {
-	capitalize,
-	checkFile,
-	formatDocument,
-	addJSX,
-	formatPath,
+  capitalize,
+  prepareFiles,
+  formatDocument,
+  addJSX,
+  getFileName,
+  formatFileName,
+  getDistinctUri,
+  createJsxFile,
 };

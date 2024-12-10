@@ -5,7 +5,7 @@ const vscode = require("vscode");
  * @returns {any}
  */
 const getConfig = (setting) => {
-	return vscode.workspace.getConfiguration("svg-to-jsx.settings").get(setting);
+  return vscode.workspace.getConfiguration("svg-to-jsx.settings").get(setting);
 };
 
-module.exports = getConfig;
+module.exports = { getConfig };
