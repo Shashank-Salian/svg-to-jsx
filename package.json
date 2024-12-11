@@ -43,7 +43,8 @@
     "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vscode-test",
-    "compile": "node esbuild.js"
+    "compile": "node esbuild.js",
+    "build": "node esbuild.js --production"
   },
   "devDependencies": {
     "@types/glob": "^7.1.4",
