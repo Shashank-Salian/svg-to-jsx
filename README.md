@@ -16,8 +16,4 @@
 
 <br />
 
-#### You can now change the config in settings -> Extentions -> SVG to JSX
-
-<br />
-
-**Enjoy!**
+#### You can now change the config in settings -> Extensions -> SVG to JSX
