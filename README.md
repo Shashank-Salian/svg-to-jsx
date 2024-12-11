@@ -4,7 +4,7 @@
 
 <br />
 
-![Usage of this extention](https://github.com/Shashank-Salian/svg-to-jsx/raw/main/usage.mp4)
+<video src="https://github.com/Shashank-Salian/svg-to-jsx/raw/main/usage.mp4" alt="Usage"></video>
 
 <br />
 
