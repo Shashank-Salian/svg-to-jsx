@@ -4,9 +4,10 @@ All notable changes to the "svg-to-jsx" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [0.1.2]
 
-- Support for vscode web
+- Updated React component template.
+- Code improvements.
 
 ## [0.0.5]
 

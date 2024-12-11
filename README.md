@@ -4,7 +4,7 @@
 
 <br />
 
-https://github.com/user-attachments/assets/322269fc-d192-474f-acb4-ad0fd9529b75
+![Usage of this extensions](https://github.com/Shashank-Salian/svg-to-jsx/raw/main/usage.gif)
 
 <br />
 
