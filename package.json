@@ -3,7 +3,7 @@
   "displayName": "SVG to JSX",
   "description": "Convert SVG to JSX directly in your VScode in just one command.",
   "publisher": "codeWithShashank",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icon": "logo.png",
   "engines": {
     "vscode": "^1.61.0"
