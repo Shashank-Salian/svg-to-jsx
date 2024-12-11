@@ -8,4 +8,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/.eslintrc.json
 usage.gif
+usage.mp4
 testassets/**
